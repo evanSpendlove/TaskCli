@@ -19,9 +19,9 @@ class TaskManager:
 
     def print_menu(self):
         print("==== TASK MANAGER MENU ====")
-        print("1. Something important")
-        print("2. Something easy")
-        print("3. Something quick")
+        print("1. Top N important")
+        print("2. Top N easy")
+        print("3. Top N quick")
         print("4. Task Stats")
         print("")
         print("0. Exit")
@@ -30,7 +30,7 @@ class TaskManager:
     def choose_option(self):
         self.clear_screen()
         self.print_menu()
-        handlers = [lambda : print("Invalid choice"), self.next_task, self.easy_task, self.quick_task, self.stats]
+        handlers = [lambda : print("Invalid choice"), lambda: self.top_n('priority'), lambda: self.top_n('energy'), lambda: self.top_n('time'), self.stats]
         option = int(input("\nChoose the next operation: "))
         print()
         if option not in self.valid_choices:
@@ -64,23 +64,32 @@ class TaskManager:
             again = self.ask_again()
             choice = -2
 
-    def next_task(self):
-        max_priority = max([t.priority_number() for t in self.tasks])
-        for task in self.tasks:
-            if task.priority_number() == max_priority:
-                print(f"Your next task is: {task}")
-                return
+    def ask_for_n(self):
+        n = 1
+        while True:
+            n = int(input("How many tasks? (up to 10): "))
+            if n not in [1,2,3,4,5,6,7,8,9,10]:
+                print("Error, invalid choice, please choose an integer between 1, 10 inclusive")
+            else:
+                break
+        return n
 
-    def easy_task(self):
-        for task in self.tasks:
-            if task.energy_level == 'Low':
-                print(f"Your easy task is: {task}")
+    def top_n(self, attribute: str):
+        keys = { 'priority': lambda task: task.priority_number(),
+                'energy': lambda task: task.energy_level,
+                'time': lambda task: task.time_to_complete }
 
-    def quick_task(self):
-        min_time = min([t.time_to_complete for t in self.tasks])
-        for task in self.tasks:
-            if task.time_to_complete == min_time:
-                print(f"Your quick task is: {task}")
+        n = self.ask_for_n()
+        tasks = self.sort_by(keys[attribute])[:n]
+        tasks = '\n'.join([str(t) for t in tasks])
+
+        if len(tasks) == 0:
+            print(f"Your task is: {tasks[0]}")
+        else:
+            print(f"Your tasks are:\n{tasks}")
+
+    def sort_by(self, key):
+        return list(sorted(self.tasks, key=key))
 
     def stats(self):
         total_tasks = len(self.tasks)
